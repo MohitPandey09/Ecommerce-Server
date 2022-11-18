@@ -1,5 +1,5 @@
-import './config/env.config';
 import express from 'express';
+import './config/env.config';
 
 class Server {
   public app: express.Application;
