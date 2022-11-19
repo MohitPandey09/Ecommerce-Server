@@ -1,5 +1,9 @@
 import express from 'express';
 import './config/env.config';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import MongoDB from './config/connection.config';
+import ApiRoute from './routes/api.route';
 
 class Server {
   public app: express.Application;
@@ -7,10 +11,19 @@ class Server {
   constructor() {
     this.app = express();
     this.config();
+    this.routes();
   }
 
   public config(): void {
     this.app.set('port', process.env.PORT);
+    this.app.use(bodyParser.urlencoded({ extended: false }));
+    this.app.use(bodyParser.json());
+    MongoDB();
+    this.app.use(cors());
+  }
+
+  public routes(): void {
+    this.app.use('/api', new ApiRoute().router);
   }
 
   public start(): void {
