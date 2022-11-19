@@ -9,6 +9,8 @@
 
 # Configuration files
 .env
+api.http
+http-client.private.env.json
 
 # dependencies
 /node_modules
