@@ -7,4 +7,20 @@ Content-Type: application/json
   "password": "admin"
 }
 
+### Register request
+POST http://{{API_URL}}/register
+Content-Type: application/json
+
+{
+  "name": "Mohit",
+  "email": "mohitpmp3@gmail.com",
+  "password": "123456789",
+  "city": "Haldwani",
+  "state": "Uttarakhand",
+  "zip": "263139",
+  "country": "India",
+  "mobile": "7983848236",
+  "address": "xyz"
+}
+
 ###
