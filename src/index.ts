@@ -4,6 +4,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import MongoDB from './config/connection.config';
 import ApiRoute from './routes/api.route';
+import ErrorHandler from './error-handler/error-handler';
 
 class Server {
   public app: express.Application;
@@ -20,6 +21,7 @@ class Server {
     this.app.use(bodyParser.json());
     MongoDB();
     this.app.use(cors());
+    this.app.use(ErrorHandler);
   }
 
   public routes(): void {

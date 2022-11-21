@@ -1,10 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import UserController from '../controllers/user.controller';
 import {
   validateReqForLogin,
   validateReqForRegister,
 } from '../middlewares/validator.middleware';
 import AuthController from '../auth/auth.controller';
+import CategoryController from '../controllers/category.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -21,6 +22,12 @@ export default class ApiRoutes {
       '/register',
       validateReqForRegister(),
       UserController.register
+    );
+
+    this.router.get(
+      '/getCategories',
+      AuthController.authenticateJWT,
+      CategoryController.getCategoriesList
     );
   }
 }
