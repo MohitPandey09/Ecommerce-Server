@@ -6,6 +6,7 @@ import {
 } from '../middlewares/validator.middleware';
 import AuthController from '../auth/auth.controller';
 import CategoryController from '../controllers/category.controller';
+import SubcategoryController from '../controllers/subcategory.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -28,6 +29,12 @@ export default class ApiRoutes {
       '/getCategories',
       AuthController.authenticateJWT,
       CategoryController.getCategoriesList
+    );
+
+    this.router.get(
+      '/getSubCategoriesByID/:categoryID',
+      AuthController.authenticateJWT,
+      SubcategoryController.getSubCategoriesByID
     );
   }
 }
