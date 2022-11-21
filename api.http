@@ -34,7 +34,12 @@ Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
 ### Get products by subcategory id request
-GET http://{{API_URL}}/getProductsBySubcategoryID/61f806aa3167801bf064f801 HTTP/1.1
+GET http://{{API_URL}}/getProductsBySubcategoryID/61f806aa3167801bf064f801
+Accept: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+### Get product details by id request
+GET http://{{API_URL}}/getProductDetails/61d1bb34cfa792063ca5d86d
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
