@@ -43,5 +43,11 @@ export default class ApiRoutes {
       AuthController.authenticateJWT,
       ProductController.getProductsBySubcategoryID
     );
+
+    this.router.get(
+      '/getProductDetails/:productID',
+      AuthController.authenticateJWT,
+      ProductController.getProductDetails
+    );
   }
 }
