@@ -7,6 +7,7 @@ import {
 import AuthController from '../auth/auth.controller';
 import CategoryController from '../controllers/category.controller';
 import SubcategoryController from '../controllers/subcategory.controller';
+import ProductController from '../controllers/product.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -35,6 +36,12 @@ export default class ApiRoutes {
       '/getSubCategoriesByID/:categoryID',
       AuthController.authenticateJWT,
       SubcategoryController.getSubCategoriesByID
+    );
+
+    this.router.get(
+      '/getProductsBySubcategoryID/:subcategoryID',
+      AuthController.authenticateJWT,
+      ProductController.getProductsBySubcategoryID
     );
   }
 }
