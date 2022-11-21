@@ -23,4 +23,9 @@ Content-Type: application/json
   "address": "xyz"
 }
 
+### Get categories list request
+GET http://{{API_URL}}/getCategories
+Accept: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
 ###
