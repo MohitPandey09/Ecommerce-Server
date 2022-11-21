@@ -28,4 +28,9 @@ GET http://{{API_URL}}/getCategories
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
+### Get subcategories by category id request
+GET http://{{API_URL}}/getSubCategoriesByID/61d1b3cccfa792063ca5d867
+Accept: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
 ###
