@@ -9,6 +9,7 @@ import CategoryController from '../controllers/category.controller';
 import SubcategoryController from '../controllers/subcategory.controller';
 import ProductController from '../controllers/product.controller';
 import CartController from '../controllers/cart.controller';
+import FavouriteController from '../controllers/favourite.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -73,6 +74,12 @@ export default class ApiRoutes {
       '/emptyCart',
       AuthController.authenticateJWT,
       CartController.emptyCart
+    );
+
+    this.router.get(
+      '/getFavourites',
+      AuthController.authenticateJWT,
+      FavouriteController.getFavourites
     );
   }
 }
