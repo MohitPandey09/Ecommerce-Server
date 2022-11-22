@@ -10,6 +10,7 @@ import SubcategoryController from '../controllers/subcategory.controller';
 import ProductController from '../controllers/product.controller';
 import CartController from '../controllers/cart.controller';
 import FavouriteController from '../controllers/favourite.controller';
+import CouponController from '../controllers/coupon.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -86,6 +87,12 @@ export default class ApiRoutes {
       '/favourite/:productID',
       AuthController.authenticateJWT,
       FavouriteController.favourite
+    );
+
+    this.router.get(
+      '/checkCoupon/:couponCode',
+      AuthController.authenticateJWT,
+      CouponController.checkCoupon
     );
   }
 }
