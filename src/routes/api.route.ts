@@ -8,6 +8,7 @@ import AuthController from '../auth/auth.controller';
 import CategoryController from '../controllers/category.controller';
 import SubcategoryController from '../controllers/subcategory.controller';
 import ProductController from '../controllers/product.controller';
+import CartController from '../controllers/cart.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -48,6 +49,12 @@ export default class ApiRoutes {
       '/getProductDetails/:productID',
       AuthController.authenticateJWT,
       ProductController.getProductDetails
+    );
+
+    this.router.post(
+      '/addItemToCart',
+      AuthController.authenticateJWT,
+      CartController.addItemToCart
     );
   }
 }

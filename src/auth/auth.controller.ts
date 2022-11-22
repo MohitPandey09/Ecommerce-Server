@@ -14,14 +14,15 @@ export default class AuthController {
     res: Response,
     next: NextFunction
   ) {
-    passport.authenticate('jwt', (err, user, info) => {
+    passport.authenticate('jwt', { session: false }, (err, user, info) => {
       if (err)
         return res.status(401).json({ status: 'Unauthorized', info: info });
 
       if (!user)
         return res.status(401).json({ status: 'Unauthorized', info: info });
 
+      req.user = user;
       return next();
-    })(req, res);
+    })(req, res, next);
   }
 }

@@ -43,4 +43,13 @@ GET http://{{API_URL}}/getProductDetails/61d1bb34cfa792063ca5d86d
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
+### Add item to cart request
+POST http://{{API_URL}}/addItemToCart
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+{
+  "productID": "61d1bb34cfa792063ca5d86d"
+}
+
 ###
