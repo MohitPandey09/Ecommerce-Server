@@ -7,6 +7,9 @@ const LocalStrategy = passportLocal.Strategy;
 const JwtStrategy = passportJwt.Strategy;
 const ExtractJWT = passportJwt.ExtractJwt;
 
+/**
+ * Strategy for user login
+ */
 passport.use(
   new LocalStrategy(
     { usernameField: 'email', passwordField: 'password' },
@@ -32,6 +35,9 @@ passport.use(
   )
 );
 
+/**
+ * Strategy for extracting token from request & return user
+ */
 passport.use(
   new JwtStrategy(
     {

@@ -52,4 +52,9 @@ Authorization: Bearer {{APP_TOKEN}}
   "productID": "61d1bb34cfa792063ca5d86d"
 }
 
+### Get cart items request
+GET http://{{API_URL}}/getCartItems
+Accept: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
 ###
