@@ -135,4 +135,83 @@ export default class CartController {
       next(new CustomError(500, 'Server Error, Something went wrong!'));
     }
   }
+
+  /**
+   * Delete item from cart by id
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async deleteCartItem(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { productID } = req.params;
+    let condition, update;
+    // Check product is available or not
+    const product = await Product.findById(productID);
+    if (product) {
+      // Check product available & quantity is <=1
+      const productInCart = await Cart.findOne(
+        {
+          userID: req.user,
+          items: {
+            $elemMatch: {
+              // It matches the array with condition
+              product: productID,
+              quantity: { $lte: 1 },
+            },
+          },
+        },
+        { 'items.$': 1 }
+      ); // It returns first match from array
+      // Pull/delete product if quantity is <=1
+      if (productInCart !== null) {
+        (condition = {
+          userID: req.user,
+          items: { $elemMatch: { product: productID, quantity: { $lte: 1 } } },
+        }),
+          (update = {
+            $inc: { totalPrice: -product.price },
+            $pull: { items: { product: productID } },
+          });
+      } else {
+        // Decrement quantity of product
+        condition = { userID: req.user, 'items.product': productID };
+        update = {
+          $inc: { 'items.$.quantity': -1, totalPrice: -product.price },
+        };
+      }
+      try {
+        const cart = await Cart.findOneAndUpdate(condition, update, {
+          new: true,
+        });
+        // If product is not found show error not found
+        if (cart !== null) {
+          res.status(200).json({
+            statusCode: 1,
+            message: 'Item Removed',
+            responseData: cart,
+          });
+        } else {
+          res.json({
+            statusCode: 0,
+            msgCode: 462,
+            message: 'Not found',
+          });
+        }
+      } catch (err) {
+        console.log('Server Error: ', err);
+        next(new CustomError(500, 'Server Error, Something went wrong!'));
+      }
+    } else {
+      // If product not available
+      res.json({
+        statusCode: 0,
+        msgCode: 463,
+        message: 'Sorry, seems like your product is not available',
+      });
+    }
+  }
 }

@@ -57,4 +57,9 @@ GET http://{{API_URL}}/getCartItems
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
+### Delete item from cart by id request
+DELETE http://{{API_URL}}/deleteCartItem/61d1bb34cfa792063ca5d86d
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
 ###
