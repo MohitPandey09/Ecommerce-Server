@@ -69,7 +69,12 @@ Authorization: Bearer {{APP_TOKEN}}
 
 ### Get favourite list request
 GET http://{{API_URL}}/getFavourites
-Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+### Set product as favourite request
+GET http://{{API_URL}}/favourite/61d1bb34cfa792063ca5d86d
+Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
 ###
