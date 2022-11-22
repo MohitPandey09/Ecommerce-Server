@@ -214,4 +214,35 @@ export default class CartController {
       });
     }
   }
+
+  /**
+   * Empty items from cart
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async emptyCart(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const cart = await Cart.findOneAndRemove({ userID: req.user });
+      if (cart !== null) {
+        res.status(200).json({
+          statusCode: 1,
+          message: 'Cart Emptied',
+        });
+      } else {
+        res.json({
+          statusCode: 0,
+          msgCode: 463,
+          message: 'Not found',
+        });
+      }
+    } catch (err) {
+      console.log('Server Error: ', err);
+      next(new CustomError(500, 'Server Error, Something went wrong!'));
+    }
+  }
 }

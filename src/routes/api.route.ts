@@ -68,5 +68,11 @@ export default class ApiRoutes {
       AuthController.authenticateJWT,
       CartController.deleteCartItem
     );
+
+    this.router.delete(
+      '/emptyCart',
+      AuthController.authenticateJWT,
+      CartController.emptyCart
+    );
   }
 }
