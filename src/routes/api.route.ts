@@ -81,5 +81,11 @@ export default class ApiRoutes {
       AuthController.authenticateJWT,
       FavouriteController.getFavourites
     );
+
+    this.router.get(
+      '/favourite/:productID',
+      AuthController.authenticateJWT,
+      FavouriteController.favourite
+    );
   }
 }
