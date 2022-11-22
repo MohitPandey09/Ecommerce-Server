@@ -16,7 +16,7 @@ export default class CartController {
     next: NextFunction
   ): Promise<void> {
     const { productID } = req.body;
-    // CHECK PRODUCT IS VALID
+    // Check product is valid
     const product = await Product.findById(productID);
 
     if (!product) {
@@ -36,14 +36,14 @@ export default class CartController {
     const cart = await Cart.findOne({ userID: req.user });
 
     if (cart) {
-      // CART IS NOT EMPTY
+      // Cart is not empty
       let updatedValue;
       const isProductAdded = cart.items.find(
         (item) => item.product == productID
       );
 
       if (isProductAdded) {
-        // ITEM EXISTS INCREASE QUANTITY
+        // Item exists, increase quantity
         updatedValue = await Cart.findOneAndUpdate(
           { userID: req.user, 'items.product': productID },
           {
@@ -55,7 +55,7 @@ export default class CartController {
           { new: true }
         );
       } else {
-        // ITEM NOT EXISTS ADD ANOTHER ITEM IN CART
+        // Item not exists, add another item in cart
         updatedValue = await Cart.findOneAndUpdate(
           { userID: req.user },
           {
@@ -72,7 +72,7 @@ export default class CartController {
         responseData: updatedValue,
       });
     } else {
-      // CART IS EMPTY SAVE ITEM IN CART
+      // Cart is empty, save item in cart
       const cartItem = new Cart({
         userID: req.user,
         items: [items],
@@ -98,6 +98,41 @@ export default class CartController {
         console.log('Server Error: ', error);
         next(new CustomError(500, 'Server Error, Something went wrong!'));
       }
+    }
+  }
+
+  /**
+   * Get cart items
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async getCartItems(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const cart = await Cart.findOne({ userID: req.user }).populate(
+        'items.product',
+        '_id name'
+      );
+      if (cart !== null) {
+        res.status(200).json({
+          statusCode: 1,
+          message: 'Cart Items',
+          responseData: cart,
+        });
+      } else {
+        res.json({
+          statusCode: 0,
+          msgCode: 461,
+          message: cart,
+        });
+      }
+    } catch (err) {
+      console.log('Server Error: ', err);
+      next(new CustomError(500, 'Server Error, Something went wrong!'));
     }
   }
 }

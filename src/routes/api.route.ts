@@ -56,5 +56,11 @@ export default class ApiRoutes {
       AuthController.authenticateJWT,
       CartController.addItemToCart
     );
+
+    this.router.get(
+      '/getCartItems',
+      AuthController.authenticateJWT,
+      CartController.getCartItems
+    );
   }
 }
