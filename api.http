@@ -62,4 +62,9 @@ DELETE http://{{API_URL}}/deleteCartItem/61d1bb34cfa792063ca5d86d
 Content-Type: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
+### Empty items from cart request
+DELETE http://{{API_URL}}/emptyCart
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
 ###
