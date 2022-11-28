@@ -1,0 +1,494 @@
+
+IItem itemTotalPrice should be a field.
+
+->billing page
+    -> first time
+        user details bhrega then api hit krega
+        customer bnega stripe pr
+        or billing details array field user m save kra denge
+
+    -> second time
+        user ko save billing details dikhengi
+            -> select krega to customer nhi bnega
+            -> add krega to customer nhi bnega pr billing details table update hongi
+
+
+
+-------------------------------------------stripe.controller.ts-------------------------------------------
+
+
+import { Request, Response, NextFunction } from 'express';
+import Cart from '../models/cart.model';
+import Stripe from 'stripe';
+import { ICart } from '../interfaces/cart.interface';
+import User from '../models/user.model';
+import Billing from '../models/billing.model';
+import CustomError from '../error-handler/custom-error.model';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2022-11-15',
+});
+
+export default class StripeController {
+  /**
+   * Create payment
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async createPaymentIntent(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    // res.status(200).json({ success: 'msg' });
+    const cartItems: ICart | null = await Cart.findOne({
+      userID: req.user,
+    }).exec();
+
+    if (cartItems?.payment_intent) {
+      // Check if payment intent already created for user
+      res.status(200).json({ clientKey: cartItems.payment_intent });
+    }
+
+    try {
+      // If payment intent not created then create
+      const paymentIntent: Stripe.PaymentIntent =
+        await stripe.paymentIntents.create({
+          amount: Number(cartItems?.totalPrice) * 100, // Stripe accept amount in cents only
+          currency: 'inr',
+          payment_method_types: ['card'],
+        });
+
+      // Update the cart with generated intent for user
+      await Cart.findOneAndUpdate(req.user, {
+        payment_intent: paymentIntent.client_secret,
+      }).exec();
+
+      // Delete cart items
+      res.status(200).json({ clientKey: paymentIntent.client_secret });
+    } catch (err: any) {
+      switch (err.type) {
+        case 'StripeCardError':
+          console.log(`A payment error occurred: ${err.message}`);
+          break;
+        case 'StripeInvalidRequestError':
+          console.log('An invalid request occurred.');
+          break;
+        default:
+          console.log('Server Error: ', err);
+          break;
+      }
+      next(new CustomError(500, `Something went wrong, ${err}`));
+    }
+  }
+
+  /**
+   * Create customer
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async createCustomer(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const user: any = await User.findById(
+      req.user,
+      'stripe_customer_id'
+    ).exec();
+
+    // Check if customer is already created
+    if (user?.stripe_customer_id) {
+      const billingDetails = await Billing.findOne(
+        { user: req.user },
+        'billing_details'
+      ).exec();
+
+      res.status(200).json({
+        statusCode: 1,
+        message: 'Billing Address',
+        responseData: billingDetails,
+      });
+    }
+
+    // Create new stripe customer
+    try {
+      const customer = await stripe.customers.create({
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        address: {
+          line1: req.body.line1,
+          postal_code: req.body.postal_code,
+          city: req.body.city,
+          state: req.body.state,
+          country: req.body.country,
+        },
+      });
+
+      // Updated the user with generated customer id
+      await User.findByIdAndUpdate(req.user, {
+        stripe_customer_id: customer.id,
+      });
+
+      // Create billing for user
+      await new Billing({ user: req.user, billing_details: customer }).save();
+
+      res.status(200).json({ statusCode: 1 });
+    } catch (err: any) {
+      switch (err.type) {
+        case 'StripeInvalidRequestError':
+          console.log('An invalid request occurred.');
+          break;
+        default:
+          console.log('Server Error: ', err);
+          break;
+      }
+      next(new CustomError(500, `Something went wrong, ${err}`));
+    }
+  }
+}
+
+-------------------------------------------cart.controller.ts-------------------------------------------
+
+
+import { Request, Response, NextFunction } from 'express';
+import Product from '../models/product.model';
+import Cart from '../models/cart.model';
+import CustomError from '../error-handler/custom-error.model';
+
+export default class CartController {
+  /**
+   * Add item to cart
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async addItemToCart(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { productID } = req.body;
+    // Check product is valid
+    const product = await Product.findById(productID);
+
+    if (!product) {
+      res.json({
+        statusCode: 0,
+        msgCode: 454,
+        message: 'Invalid request, Product not Found',
+      });
+    }
+
+    // Remove intent from cart
+    await Cart.findOneAndUpdate(
+      { user: req.user },
+      {
+        $set: { payment_intent: null },
+      }
+    ).exec();
+
+    const items = {
+      product: productID,
+      quantity: 1,
+      price: product?.price,
+    };
+
+    const cart = await Cart.findOne({ user: req.user });
+
+    if (cart) {
+      // Cart is not empty
+      let updatedValue;
+      const isProductAdded = cart.items.find(
+        (item) => item.product == productID
+      );
+
+      if (isProductAdded) {
+        // Item exists, increase quantity
+        updatedValue = await Cart.findOneAndUpdate(
+          { user: req.user, 'items.product': productID },
+          {
+            $inc: {
+              'items.$.quantity': 1,
+              totalPrice: product?.price,
+            },
+          },
+          { new: true }
+        );
+      } else {
+        // Item not exists, add another item in cart
+        updatedValue = await Cart.findOneAndUpdate(
+          { user: req.user },
+          {
+            $push: { items: items },
+            $inc: { totalPrice: product?.price },
+          },
+          { new: true }
+        );
+      }
+
+      res.status(200).json({
+        statusCode: 1,
+        message: 'Item added successfully',
+        responseData: updatedValue,
+      });
+    } else {
+      // Cart is empty, save item in cart
+      const cartItem = new Cart({
+        user: req.user,
+        items: [items],
+        totalPrice: product?.price,
+      });
+
+      const savedCart = await cartItem.save();
+      try {
+        if (savedCart !== null) {
+          res.status(200).json({
+            statusCode: 1,
+            message: 'Item added successfully',
+            responseData: savedCart,
+          });
+        } else {
+          res.json({
+            statusCode: 0,
+            msgCode: 460,
+            message: savedCart,
+          });
+        }
+      } catch (error) {
+        console.log('Server Error: ', error);
+        next(new CustomError(500, 'Server Error, Something went wrong!'));
+      }
+    }
+  }
+
+  /**
+   * Get cart items
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async getCartItems(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const cart = await Cart.findOne({ user: req.user }).populate(
+        'items.product',
+        '_id name'
+      );
+      if (cart !== null) {
+        res.status(200).json({
+          statusCode: 1,
+          message: 'Cart Items',
+          responseData: cart,
+        });
+      } else {
+        res.json({
+          statusCode: 0,
+          msgCode: 461,
+          message: cart,
+        });
+      }
+    } catch (err) {
+      console.log('Server Error: ', err);
+      next(new CustomError(500, 'Server Error, Something went wrong!'));
+    }
+  }
+
+  /**
+   * Delete item from cart by id
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async deleteCartItem(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { productID } = req.params;
+    let condition, update;
+    // Check product is available or not
+    const product = await Product.findById(productID);
+    if (product) {
+      // Remove intent from cart
+      await Cart.findOneAndUpdate(
+        { user: req.user },
+        {
+          $set: { payment_intent: null },
+        }
+      ).exec();
+
+      // Check product available & quantity is <=1
+      const productInCart = await Cart.findOne(
+        {
+          user: req.user,
+          items: {
+            $elemMatch: {
+              // It matches the array with condition
+              product: productID,
+              quantity: { $lte: 1 },
+            },
+          },
+        },
+        { 'items.$': 1 }
+      ); // It returns first match from array
+
+      // Pull/delete product if quantity is <=1
+      if (productInCart !== null) {
+        condition = {
+          user: req.user,
+          items: { $elemMatch: { product: productID, quantity: { $lte: 1 } } },
+        };
+        update = {
+          $inc: { totalPrice: -product.price },
+          $pull: { items: { product: productID } },
+        };
+      } else {
+        // Decrement quantity of product
+        condition = { user: req.user, 'items.product': productID };
+        update = {
+          $inc: { 'items.$.quantity': -1, totalPrice: -product.price },
+        };
+      }
+      try {
+        const cart = await Cart.findOneAndUpdate(condition, update, {
+          new: true,
+        });
+        // If product is not found show error not found
+        if (cart !== null) {
+          res.status(200).json({
+            statusCode: 1,
+            message: 'Item Removed',
+            responseData: cart,
+          });
+        } else {
+          res.json({
+            statusCode: 0,
+            msgCode: 462,
+            message: 'Not found',
+          });
+        }
+      } catch (err) {
+        console.log('Server Error: ', err);
+        next(new CustomError(500, 'Server Error, Something went wrong!'));
+      }
+    } else {
+      // If product not available
+      res.json({
+        statusCode: 0,
+        msgCode: 463,
+        message: 'Sorry, seems like your product is not available',
+      });
+    }
+  }
+}
+
+-------------------------------------------user.controller.ts-------------------------------------------
+
+in login
+
+res.status(200).send({ statusCode: 1, token: token, userData: user });
+
+
+-------------------------------------------billing.interface.ts-------------------------------------------
+
+import { Document, Types } from 'mongoose';
+
+export interface IAddress extends Document {
+  line1: string;
+  postal_code: number;
+  city: string;
+  state: string;
+  country: string;
+}
+
+export interface IBillingDetails extends Document {
+  name: string;
+  email: string;
+  phone: number;
+  address: IAddress;
+}
+
+export interface IBilling extends Document {
+  user: Types.ObjectId;
+  billing_details: [IBillingDetails];
+  isDeleted: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+-------------------------------------------cart.interface.ts-------------------------------------------
+
+add
+  payment_intent: string;
+
+-------------------------------------------user.interface.ts-------------------------------------------
+
+add
+  stripe_customer_id: string;
+
+-------------------------------------------billing.model.ts-------------------------------------------
+
+import mongoose, { model, Model, Schema } from 'mongoose';
+import { IBilling } from '../interfaces/billing.interface';
+
+const addressSchema = new Schema({
+  line1: String,
+  postal_code: Number,
+  city: String,
+  state: String,
+  country: String,
+});
+
+const billingDetailsSchema = new Schema({
+  name: String,
+  email: String,
+  phone: Number,
+  address: addressSchema,
+});
+
+const billingSchema = new Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  billing_details: [billingDetailsSchema],
+  isDeleted: { type: Number, default: 0 },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+});
+
+const Billing: Model<IBilling> = model<IBilling>('Billing', billingSchema);
+export default Billing;
+
+-------------------------------------------cart.model.ts-------------------------------------------
+
+add
+  payment_intent: { type: String, default: null },
+
+-------------------------------------------user.model.ts-------------------------------------------
+
+add
+  stripe_customer_id: String,
+
+-------------------------------------------api.route.ts-------------------------------------------
+add
+
+    this.router.post('/payment', StripeController.createPaymentIntent);
+
+    this.router.post(
+      '/createCustomer',
+      AuthController.authenticateJWT,
+      StripeController.createCustomer
+    );
+
+--------------------------------------------------------------------------------------------------
+
+
+

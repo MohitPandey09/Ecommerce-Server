@@ -83,3 +83,8 @@ Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
 ###
+POST http://{{API_URL}}/createCustomer
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+###
