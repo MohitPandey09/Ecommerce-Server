@@ -11,6 +11,7 @@ import ProductController from '../controllers/product.controller';
 import CartController from '../controllers/cart.controller';
 import FavouriteController from '../controllers/favourite.controller';
 import CouponController from '../controllers/coupon.controller';
+import StripeController from '../controllers/stripe.controller';
 
 export default class ApiRoutes {
   router: Router;
@@ -93,6 +94,12 @@ export default class ApiRoutes {
       '/checkCoupon/:couponCode',
       AuthController.authenticateJWT,
       CouponController.checkCoupon
+    );
+
+    this.router.post(
+      '/createCustomer',
+      AuthController.authenticateJWT,
+      StripeController.createCustomer
     );
   }
 }
