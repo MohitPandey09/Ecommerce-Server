@@ -17,6 +17,7 @@ const cartSchema = new Schema({
   },
   items: [itemSchema],
   totalPrice: { type: Number, default: 0 },
+  payment_intent: { type: String, default: null },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
 });

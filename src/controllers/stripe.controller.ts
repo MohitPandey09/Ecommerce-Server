@@ -77,4 +77,57 @@ export default class StripeController {
       next(new CustomError(500, `Something went wrong, ${err.message}`));
     }
   }
+
+  /**
+   * Create payment
+   * @param req
+   * @param res
+   * @param next
+   */
+  public static async createPaymentIntent(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    // res.status(200).json({ success: 'msg' });
+    const cartItems: ICart | null = await Cart.findOne({
+      userID: req.user,
+    }).exec();
+
+    if (cartItems?.payment_intent) {
+      // Check if payment intent already created for user
+      res.status(200).json({ clientKey: cartItems.payment_intent });
+    }
+
+    try {
+      // If payment intent not created then create
+      const paymentIntent: Stripe.PaymentIntent =
+        await stripe.paymentIntents.create({
+          amount: Number(cartItems?.totalPrice) * 100, // Stripe accept amount in cents only
+          currency: 'inr',
+          payment_method_types: ['card'],
+        });
+
+      // Update the cart with generated intent for user
+      await Cart.findOneAndUpdate(req.user, {
+        payment_intent: paymentIntent.client_secret,
+      }).exec();
+
+      // Delete cart items
+      res.status(200).json({ clientKey: paymentIntent.client_secret });
+    } catch (err: any) {
+      switch (err.type) {
+        case 'StripeCardError':
+          console.log(`A payment error occurred: ${err.message}`);
+          break;
+        case 'StripeInvalidRequestError':
+          console.log('An invalid request occurred.');
+          break;
+        default:
+          console.log('Server Error: ', err);
+          break;
+      }
+      next(new CustomError(500, `Something went wrong, ${err}`));
+    }
+  }
 }

@@ -14,6 +14,7 @@ const userSchema = new Schema<IUser>({
   country: String,
   mobile: String,
   email_verified: Number,
+  stripe_customer_id: String,
   isDeleted: { type: Number, default: 0 },
   isBlocked: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },

@@ -27,13 +27,21 @@ export default class CartController {
       });
     }
 
+    // Remove intent from cart
+    await Cart.findOneAndUpdate(
+      { user: req.user },
+      {
+        $set: { payment_intent: null },
+      }
+    ).exec();
+
     const items = {
       product: productID,
       quantity: 1,
       price: product?.price,
     };
 
-    const cart = await Cart.findOne({ userID: req.user });
+    const cart = await Cart.findOne({ user: req.user });
 
     if (cart) {
       // Cart is not empty
@@ -45,7 +53,7 @@ export default class CartController {
       if (isProductAdded) {
         // Item exists, increase quantity
         updatedValue = await Cart.findOneAndUpdate(
-          { userID: req.user, 'items.product': productID },
+          { user: req.user, 'items.product': productID },
           {
             $inc: {
               'items.$.quantity': 1,
@@ -57,7 +65,7 @@ export default class CartController {
       } else {
         // Item not exists, add another item in cart
         updatedValue = await Cart.findOneAndUpdate(
-          { userID: req.user },
+          { user: req.user },
           {
             $push: { items: items },
             $inc: { totalPrice: product?.price },
@@ -74,7 +82,7 @@ export default class CartController {
     } else {
       // Cart is empty, save item in cart
       const cartItem = new Cart({
-        userID: req.user,
+        user: req.user,
         items: [items],
         totalPrice: product?.price,
       });
@@ -113,7 +121,7 @@ export default class CartController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const cart = await Cart.findOne({ userID: req.user }).populate(
+      const cart = await Cart.findOne({ user: req.user }).populate(
         'items.product',
         '_id name'
       );
@@ -152,10 +160,18 @@ export default class CartController {
     // Check product is available or not
     const product = await Product.findById(productID);
     if (product) {
+      // Remove intent from cart
+      await Cart.findOneAndUpdate(
+        { user: req.user },
+        {
+          $set: { payment_intent: null },
+        }
+      ).exec();
+
       // Check product available & quantity is <=1
       const productInCart = await Cart.findOne(
         {
-          userID: req.user,
+          user: req.user,
           items: {
             $elemMatch: {
               // It matches the array with condition
@@ -166,19 +182,20 @@ export default class CartController {
         },
         { 'items.$': 1 }
       ); // It returns first match from array
+
       // Pull/delete product if quantity is <=1
       if (productInCart !== null) {
-        (condition = {
-          userID: req.user,
+        condition = {
+          user: req.user,
           items: { $elemMatch: { product: productID, quantity: { $lte: 1 } } },
-        }),
-          (update = {
-            $inc: { totalPrice: -product.price },
-            $pull: { items: { product: productID } },
-          });
+        };
+        update = {
+          $inc: { totalPrice: -product.price },
+          $pull: { items: { product: productID } },
+        };
       } else {
         // Decrement quantity of product
-        condition = { userID: req.user, 'items.product': productID };
+        condition = { user: req.user, 'items.product': productID };
         update = {
           $inc: { 'items.$.quantity': -1, totalPrice: -product.price },
         };

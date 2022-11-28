@@ -12,6 +12,7 @@ export interface IUser extends Document {
   country: string;
   mobile: string;
   email_verified: number;
+  stripe_customer_id: string;
   isDeleted: number;
   isBlocked: number;
   created_at: Date;
