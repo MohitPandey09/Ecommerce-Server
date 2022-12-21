@@ -13,6 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 export default class StripeController {
   /**
    * Create payment intent
+
    * @param req
    * @param res
    * @param next

@@ -82,6 +82,7 @@ GET http://{{API_URL}}/checkCoupon/xyz
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
+
 ### Create customer request
 POST http://{{API_URL}}/createCustomer
 Content-Type: application/json
