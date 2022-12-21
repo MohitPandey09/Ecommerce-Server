@@ -82,8 +82,18 @@ GET http://{{API_URL}}/checkCoupon/xyz
 Accept: application/json
 Authorization: Bearer {{APP_TOKEN}}
 
-###
+### Create customer request
 POST http://{{API_URL}}/createCustomer
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+### Create payment intent request
+POST http://{{API_URL}}/payment
+Content-Type: application/json
+Authorization: Bearer {{APP_TOKEN}}
+
+### Delete many request
+DELETE http://{{API_URL}}/delete
 Content-Type: application/json
 Authorization: Bearer {{APP_TOKEN}}
 

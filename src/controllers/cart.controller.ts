@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Product from '../models/product.model';
 import Cart from '../models/cart.model';
 import CustomError from '../error-handler/custom-error.model';
@@ -244,7 +244,7 @@ export default class CartController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const cart = await Cart.findOneAndRemove({ userID: req.user });
+      const cart = await Cart.findOneAndRemove({ user: req.user });
       if (cart !== null) {
         res.status(200).json({
           statusCode: 1,

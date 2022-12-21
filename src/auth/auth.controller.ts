@@ -21,7 +21,7 @@ export default class AuthController {
       if (!user)
         return res.status(401).json({ status: 'Unauthorized', info: info });
 
-      req.user = user;
+      req.user = user._id;
       return next();
     })(req, res, next);
   }

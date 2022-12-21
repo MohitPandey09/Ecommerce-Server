@@ -97,11 +97,15 @@ export default class ApiRoutes {
     );
 
     this.router.post(
-      '/createCustomer',
+      '/payment',
       AuthController.authenticateJWT,
-      StripeController.createCustomer
+      StripeController.createPaymentMethod
     );
 
-    this.router.post('/payment', StripeController.createPaymentIntent);
+    this.router.post(
+      '/confirmPayment',
+      AuthController.authenticateJWT,
+      StripeController.confirmPaymentIntent
+    );
   }
 }

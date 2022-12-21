@@ -12,20 +12,16 @@ class Server {
   constructor() {
     this.app = express();
     this.config();
-    this.routes();
   }
 
   public config(): void {
     this.app.set('port', process.env.PORT);
+    this.app.use(cors());
     this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use(bodyParser.json());
     MongoDB();
-    this.app.use(cors());
-    this.app.use(ErrorHandler);
-  }
-
-  public routes(): void {
     this.app.use('/api', new ApiRoute().router);
+    this.app.use(ErrorHandler);
   }
 
   public start(): void {

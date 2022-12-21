@@ -84,7 +84,7 @@ export default class UserController {
         process.env.APP_SECRET_KEY as string
       );
 
-      res.status(200).send({ token: token });
+      res.status(200).send({ token: token, userData: user });
     })(req, res, next);
   }
 }

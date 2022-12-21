@@ -11,6 +11,7 @@
 .env
 api.http
 http-client.private.env.json
+todo.txt
 
 # dependencies
 /node_modules
