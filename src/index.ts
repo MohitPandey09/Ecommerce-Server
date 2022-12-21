@@ -17,10 +17,10 @@ class Server {
 
   public config(): void {
     this.app.set('port', process.env.PORT);
+    this.app.use(cors());
     this.app.use(bodyParser.urlencoded({ extended: false }));
     this.app.use(bodyParser.json());
     MongoDB();
-    this.app.use(cors());
     this.app.use(ErrorHandler);
   }
 
