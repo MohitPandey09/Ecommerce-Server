@@ -7,7 +7,7 @@ export interface IItems extends Document {
 }
 
 export interface ICart extends Document {
-  userID: Types.ObjectId;
+  user: Types.ObjectId;
   items: [IItems];
   totalPrice: number;
   payment_intent: string;
